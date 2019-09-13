@@ -9,12 +9,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
 
-#define MTU 	1500U
-#define PORT 	55555
+#define MTU 1500U
 
 int tun_alloc(char *dev)
 {
@@ -64,14 +60,15 @@ int dump_bytes(unsigned char *buffer, int len)
 
 int main(int argc, char **argv)
 {
-	int tun_fd, sock_fd;
-	int ret;
+	int tun_fd;
 	int nread;
-	struct sockaddr_in remote;
+
+/*	struct sockaddr_in remote; */
 
 	char interface_name[] = "tun0";
 	char remote_ip[] = "193.0.0.1";
 	char buffer[MTU];
+
 	
 	tun_fd = tun_alloc(interface_name);
 	
@@ -79,28 +76,24 @@ int main(int argc, char **argv)
 		fprintf(stdout, "Tun alloc successful\n");
 	}
 
-	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+	while(1) {
 
-	if(sock_fd < 0) {
-		perror("socket creation");
-		exit(1);
+		nread = read(tun_fd, buffer, sizeof(buffer));
+		
+		fprintf(stdout, "Bytes read: %d\n", nread);
+
+		if(nread < 0) {
+			close(tun_fd);
+			exit(1);
+		}
+		
+		dump_bytes(buffer, nread);
 	}
 
-	memset(&remote, 0, sizeof(struct sockaddr_in));
+/*	memset(&remote, 0, sizeof(struct sockaddr_in));
 
 	remote.sin_family = AF_INET;
-	remote.sin_addr.s_addr = inet_addr(remote_ip);
-	remote.sin_port = htons(PORT);
-
-	ret = connect(sock_fd, (struct sockaddr *) &remote, sizeof(remote));
-
-	if(ret != 0) {
-		perror("connect()");
-		exit(1);
-	}
-
-	fprintf(stdout, "Client connected to server");
-
+	remote.sin_addr.s_addr = inet_addr(remote_ip);*/
 
 	return 0;
 }
