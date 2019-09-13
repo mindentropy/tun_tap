@@ -25,7 +25,7 @@ int tun_alloc(char *dev)
 	memset(&ifr, 0, sizeof(ifr));
 	
 	/* Set flags TUN or TAP etc */
-	ifr.ifr_ifru.ifru_flags = IFF_TUN;
+	ifr.ifr_ifru.ifru_flags = IFF_TUN | IFF_NO_PI;
 
 	/* Do a string copy of the interface name */
 	if(*dev) {
@@ -50,14 +50,9 @@ int dump_bytes(unsigned char *buffer, int len)
 	int i = 0;
 
 	for(i = 0; i<len; i++) {
-
-		if(i && ((i % 64) == 0)) {
-			printf("\n");
-		}
-
 		fprintf(stdout, "0x%02x ", buffer[i]);
-		fflush(stdout);
 	}
+	fflush(stdout);
 	fprintf(stdout,"\n");
 }
 
@@ -70,19 +65,21 @@ int main(int argc, char **argv)
 
 	char interface_name[] = "tun0";
 	char remote_ip[] = "193.0.0.1";
-	char buffer[64];
+	char buffer[1500];
 
 	
 	tun_fd = tun_alloc(interface_name);
 	
 	if(tun_fd != -1) {
-		fprintf(stdout, "Tun alloc successfull\n");
+		fprintf(stdout, "Tun alloc successful\n");
 	}
 
 	while(1) {
 
 		nread = read(tun_fd, buffer, sizeof(buffer));
 		
+		fprintf(stdout, "Bytes read: %d\n", nread);
+
 		if(nread < 0) {
 			close(tun_fd);
 			exit(1);
